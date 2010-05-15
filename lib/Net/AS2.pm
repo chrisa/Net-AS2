@@ -52,19 +52,21 @@ sub request {
 	my ($self, %params) = @_;
 	
 	my $body = MIME::Entity->new;
-	my $http = HTTP::Request->new;
+	my $http = HTTP::Request->new(POST => $self->uri);
 
 	my $request = Net::AS2::Request->new(
-		from    => $self->from,
-		to      => $params{to},
-		body    => $body,
-		http    => $http,
-		uri     => $self->uri,
-		payload => $params{payload},
+		from	     => $self->from,
+		to	     => $params{to},
+		body	     => $body,
+		http	     => $http,
+		uri	     => $self->uri,
+		payload	     => $params{payload},
+		content_type => $params{content_type},
 	);
 
-	# RFC4130 wants signature inside encrypted payload - sign first. 
-	
+	# Per RFC4130, sign then encrypt - order of role composition
+	# is important.
+
 	if ($params{signed}) {
 		Net::AS2::Request::Role::Signed->meta->apply($request);
 		$request->setPrivateKey(
@@ -72,7 +74,6 @@ sub request {
 			$self->get_cert($params{signed}),
 		);
 	}
-
 	if ($params{encrypted}) {
 		Net::AS2::Request::Role::Encrypted->meta->apply($request);
 		$request->setPublicKey(

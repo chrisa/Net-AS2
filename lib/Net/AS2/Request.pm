@@ -4,6 +4,7 @@ use MooseX::Types::Moose qw/ Str /;
 use MooseX::Types::URI qw/ Uri /;
 use Net::AS2::Types qw/ HttpReq SMIME MIME /;
 use Email::MessageID;
+use HTTP::Date;
 
 =head1 NAME
 
@@ -43,17 +44,18 @@ sub prepare_body {
 	my ($self) = @_;
 
 	$self->body->build(
-		Type => $self->content_type,
-		Data => $self->payload,
+		Type	    => $self->content_type,
+		Data	    => $self->payload,
 	);
 }
 
 sub prepare_http {
 	my ($self) = @_;
 
-	$self->http->method('POST');
-	$self->http->uri($self->uri->as_string);
-	$self->http->header( 'Host' => $self->uri->host );
+	$self->http->header( 'Host'       => $self->uri->host );
+	$self->http->header( 'Connection' => 'close' );
+	$self->http->header( 'Date'       => time2str() );
+	$self->http->header( 'Accept'     => '*/*' );
 
 	$self->http->header( 'User-Agent'   => 'Perl Net::AS2' );
 	$self->http->header( 'AS2-Version'  => '1.0' );
@@ -66,7 +68,7 @@ sub prepare_http {
 	$self->http->header( 'Subject'  => $self->subject );
 
 	my $message_id = Email::MessageID->new;
-	$self->http->header( 'Message-ID' => $message_id );
+	$self->http->header( 'Message-ID' => "<$message_id>" );
 
 	for my $header ($self->body->head->tags) {
 		$self->http->header( $header => $self->body->head->get($header) );
