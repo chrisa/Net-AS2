@@ -3,7 +3,6 @@ use Moose;
 use MooseX::Types::Moose qw/ HashRef Str /;
 
 use MIME::Entity;
-use Crypt::SMIME;
 use HTTP::Request;
 
 use Net::AS2::Request;
@@ -12,7 +11,7 @@ use Net::AS2::Request::Role::Encrypted;
 
 use Net::AS2::Types qw/ CertPEM KeyPEM /;
 
-use 5.008;
+use 5.008001;
 our $VERSION = '0.0.1';
 
 =head1 NAME
@@ -79,7 +78,7 @@ sub request {
 		$request->setPublicKey(
 			$self->get_cert($params{encrypted}),
 		);
-	}		
+	}
 
 	return $request;
 }

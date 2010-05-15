@@ -5,6 +5,7 @@ use MooseX::Types::URI qw/ Uri /;
 use Net::AS2::Types qw/ HttpReq SMIME MIME /;
 use Email::MessageID;
 use HTTP::Date;
+use Crypt::SMIME;
 
 =head1 NAME
 
@@ -18,8 +19,8 @@ has 'http'    => (is => 'ro', isa => HttpReq, required => 1);
 has 'body'    => (is => 'ro', isa => MIME,    required => 1, writer => '_set_body');
 has 'smime'   => (is => 'ro', isa => SMIME,   lazy => 1, default => sub { Crypt::SMIME->new } );
 
-has 'payload' => (is => 'rw', isa => Str,     required => 1);
-has 'uri'     => (is => 'rw', isa => Uri,     required => 1, coerce => 1);
+has 'payload' => (is => 'rw', isa => Str, required => 1);
+has 'uri'     => (is => 'rw', isa => Uri, required => 1, coerce => 1);
 
 has 'to'       => (is => 'rw', isa => Str, required => 1);
 has 'from'     => (is => 'rw', isa => Str, required => 1);
@@ -44,8 +45,8 @@ sub prepare_body {
 	my ($self) = @_;
 
 	$self->body->build(
-		Type	    => $self->content_type,
-		Data	    => $self->payload,
+		Type => $self->content_type,
+		Data => $self->payload,
 	);
 }
 
