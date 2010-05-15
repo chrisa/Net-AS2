@@ -14,7 +14,7 @@ Net::AS2 - Request class for RFC4130 "AS2" Messages
 =cut
 
 has 'http'    => (is => 'ro', isa => HttpReq, required => 1);
-has 'body'    => (is => 'ro', isa => MIME,    required => 1);
+has 'body'    => (is => 'ro', isa => MIME,    required => 1, writer => '_set_body');
 has 'smime'   => (is => 'ro', isa => SMIME,   lazy => 1, default => sub { Crypt::SMIME->new } );
 
 has 'payload' => (is => 'rw', isa => Str,     required => 1);
@@ -42,7 +42,7 @@ sub BUILD {
 sub prepare_body {
 	my ($self) = @_;
 
-	$self->body->attach(
+	$self->body->build(
 		Type => $self->content_type,
 		Data => $self->payload,
 	);

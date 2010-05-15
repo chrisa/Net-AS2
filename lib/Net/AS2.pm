@@ -63,6 +63,8 @@ sub request {
 		payload => $params{payload},
 	);
 
+	# RFC4130 wants signature inside encrypted payload - sign first. 
+	
 	if ($params{signed}) {
 		Net::AS2::Request::Role::Signed->meta->apply($request);
 		$request->setPrivateKey(
@@ -70,6 +72,7 @@ sub request {
 			$self->get_cert($params{signed}),
 		);
 	}
+
 	if ($params{encrypted}) {
 		Net::AS2::Request::Role::Encrypted->meta->apply($request);
 		$request->setPublicKey(

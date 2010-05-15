@@ -11,16 +11,12 @@ sub setPrivateKey {
 
 after 'prepare_body' => sub {
 	my ($self) = @_;
-	
-	#my ($prepared_mime, $outer_header) = 
-	#     $self->smime->prepareSmimeMessage($self->body->as_string);
-	#use Data::Dumper;
-	#print STDERR Dumper { prep => $prepared_mime, outer => $outer_header };
-
 	my $signed = $self->smime->sign($self->body->as_string);
-
 	my $parser = MIME::Parser->new;
+	$parser->tmp_to_core(1);
+	$parser->output_to_core(1);
 	my $entity = $parser->parse_data($signed);
+	$self->_set_body($entity);
 };
 
 1;
