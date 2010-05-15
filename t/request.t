@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 18;
+use Test::More tests => 22;
 use Test::Moose;
 
 BEGIN { use_ok 'Net::AS2' };
@@ -31,41 +31,57 @@ isa_ok($req, 'Net::AS2::Request');
 meta_ok($req);
 $req->prepare_body;
 $req->prepare_http;
-#my $message = $req->as_string;
-#diag("\n", $message);
-#ok($message);
+my $message = $req->as_string;
+diag("\n", $message);
+ok($message);
 
-my $req_signed = $as2->request(
+$req = $as2->request(
 	to           => 'their.identity@example.com',
 	signed       => 'our.identity@example.com',
 	payload      => $payload,
 	content_type => $content_type,
 );
-ok($req_signed);
-isa_ok($req_signed, 'Net::AS2::Request');
-meta_ok($req_signed);
-does_ok($req_signed, 'Net::AS2::Request::Role::Signed');
+ok($req);
+isa_ok($req, 'Net::AS2::Request');
+meta_ok($req);
+does_ok($req, 'Net::AS2::Request::Role::Signed');
+$req->prepare_body;
+$req->prepare_http;
+$message = $req->as_string;
+diag("\n", $message);
+ok($message);
 
-my $req_encrypted = $as2->request(
+$req = $as2->request(
 	to           => 'their.identity@example.com',
 	encrypted    => 'their.identity@example.com',
 	payload      => $payload,
 	content_type => $content_type,
 );
-ok($req_encrypted);
-isa_ok($req_encrypted, 'Net::AS2::Request');
-meta_ok($req_encrypted);
-does_ok($req_encrypted, 'Net::AS2::Request::Role::Encrypted');
+ok($req);
+isa_ok($req, 'Net::AS2::Request');
+meta_ok($req);
+does_ok($req, 'Net::AS2::Request::Role::Encrypted');
+$req->prepare_body;
+$req->prepare_http;
+$message = $req->as_string;
+diag("\n", $message);
+ok($message);
 
-my $req_signed_encrypted = $as2->request(
+$req = $as2->request(
 	to           => 'their.identity@example.com',
 	signed       => 'our.identity@example.com',
 	encrypted    => 'their.identity@example.com',
 	payload      => $payload,
 	content_type => $content_type,
 );
-ok($req_signed_encrypted);
-isa_ok($req_signed_encrypted, 'Net::AS2::Request');
-meta_ok($req_signed_encrypted);
-does_ok($req_signed_encrypted, 'Net::AS2::Request::Role::Signed');
-does_ok($req_signed_encrypted, 'Net::AS2::Request::Role::Encrypted');
+ok($req);
+isa_ok($req, 'Net::AS2::Request');
+meta_ok($req);
+does_ok($req, 'Net::AS2::Request::Role::Signed');
+does_ok($req, 'Net::AS2::Request::Role::Encrypted');
+$req->prepare_body;
+$req->prepare_http;
+$message = $req->as_string;
+diag("\n", $message);
+ok($message);
+

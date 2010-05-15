@@ -13,10 +13,12 @@ Net::AS2 - Request class for RFC4130 "AS2" Messages
 
 =cut
 
-has 'http'    => (is => 'ro', isa => HttpReq,      required => 1);
-has 'body'    => (is => 'ro', isa => SMIME | MIME, required => 1);
-has 'payload' => (is => 'rw', isa => Str,          required => 1);
-has 'uri'     => (is => 'rw', isa => Uri,          required => 1, coerce => 1);
+has 'http'    => (is => 'ro', isa => HttpReq, required => 1);
+has 'body'    => (is => 'ro', isa => MIME,    required => 1);
+has 'smime'   => (is => 'ro', isa => SMIME,   lazy => 1, default => sub { Crypt::SMIME->new } );
+
+has 'payload' => (is => 'rw', isa => Str,     required => 1);
+has 'uri'     => (is => 'rw', isa => Uri,     required => 1, coerce => 1);
 
 has 'to'       => (is => 'rw', isa => Str, required => 1);
 has 'from'     => (is => 'rw', isa => Str, required => 1);
@@ -40,8 +42,7 @@ sub BUILD {
 sub prepare_body {
 	my ($self) = @_;
 
-	$self->body->add( 'Subject' => $self->subject );
-	$self->body->build(
+	$self->body->attach(
 		Type => $self->content_type,
 		Data => $self->payload,
 	);
@@ -53,19 +54,22 @@ sub prepare_http {
 	$self->http->method('POST');
 	$self->http->uri($self->uri->as_string);
 	$self->http->header( 'Host' => $self->uri->host );
-	$self->http->header( 'User-Agent'  => 'Perl Net::AS2' );
-	$self->http->header( 'AS2-Version' => '1.0' );
+
+	$self->http->header( 'User-Agent'   => 'Perl Net::AS2' );
+	$self->http->header( 'AS2-Version'  => '1.0' );
+	$self->http->header( 'MIME-Version' => '1.0' );
 
 	$self->http->header( 'To'	=> $self->to );
 	$self->http->header( 'From'	=> $self->from );
 	$self->http->header( 'AS2-To'	=> $self->as2_to );
 	$self->http->header( 'AS2-From' => $self->as2_from );
+	$self->http->header( 'Subject'  => $self->subject );
 
 	my $message_id = Email::MessageID->new;
 	$self->http->header( 'Message-ID' => $message_id );
 
-	for my $header (@{ $self->body->fields }) {
-		$self->http->header( $header->[0] => $header->[1] );
+	for my $header ($self->body->head->tags) {
+		$self->http->header( $header => $self->body->head->get($header) );
 	}
 
 	{

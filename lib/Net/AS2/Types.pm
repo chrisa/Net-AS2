@@ -16,6 +16,6 @@ class_type HttpReq, { class => 'HTTP::Request' };
 
 class_type SMIME, { class => 'Crypt::SMIME' };
 
-class_type MIME, { class => 'MIME::Lite' };
+class_type MIME, { class => 'MIME::Entity' };
 
 1;

@@ -2,7 +2,7 @@ package Net::AS2;
 use Moose;
 use MooseX::Types::Moose qw/ HashRef Str /;
 
-use MIME::Lite;
+use MIME::Entity;
 use Crypt::SMIME;
 use HTTP::Request;
 
@@ -51,26 +51,7 @@ has 'from' => (is => 'ro', isa => Str, required => 1);
 sub request {
 	my ($self, %params) = @_;
 	
-	my $body;
-	if ($params{signed} || $params{encrypted}) {
-		$body = Crypt::SMIME->new;
-		if ($params{signed}) {
-			$body->setPrivateKey(
-				$self->get_key($params{signed}),
-				$self->get_cert($params{signed}),
-				# XXX passphrase
-			);
-		}
-		if ($params{encrypted}) {
-			$body->setPublicKey(
-				$self->get_cert($params{encrypted}),
-			);
-		}
-	}
-	else {
-		$body = MIME::Lite->new;
-	}
-
+	my $body = MIME::Entity->new;
 	my $http = HTTP::Request->new;
 
 	my $request = Net::AS2::Request->new(
@@ -81,11 +62,19 @@ sub request {
 		uri     => $self->uri,
 		payload => $params{payload},
 	);
+
 	if ($params{signed}) {
 		Net::AS2::Request::Role::Signed->meta->apply($request);
+		$request->setPrivateKey(
+			$self->get_key($params{signed}),
+			$self->get_cert($params{signed}),
+		);
 	}
 	if ($params{encrypted}) {
 		Net::AS2::Request::Role::Encrypted->meta->apply($request);
+		$request->setPublicKey(
+			$self->get_cert($params{encrypted}),
+		);
 	}		
 
 	return $request;
