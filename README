@@ -1,0 +1,14 @@
+Net::AS2
+
+This module provides support for AS2 transactions, per rfc4130. 
+
+Very much work-in-progress, there's:
+
+ * Sending messages, with signing and encryption
+ 
+but not:
+
+ * Requesting MDNs
+ * Sending MDNs
+ * Receiving messages
+
