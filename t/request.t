@@ -23,7 +23,7 @@ my $content_type = 'text/plain';
 
 # CLEARTEXT, NOT SIGNED
 
-my $req = $as2->request(
+my $req = $as2->create_request(
 	to           => 'their.identity@example.com',
 	payload      => $payload,
 	content_type => $content_type,
@@ -31,8 +31,6 @@ my $req = $as2->request(
 ok($req);
 isa_ok($req, 'Net::AS2::Request');
 meta_ok($req);
-$req->prepare_body;
-$req->prepare_http;
 my $message = $req->as_string;
 #diag("\n", $message);
 ok($message);
@@ -44,7 +42,7 @@ like($message, qr/^MIME-Version: 1.0/m);
 
 # CLEARTEXT, SIGNED
 
-$req = $as2->request(
+$req = $as2->create_request(
 	to           => 'their.identity@example.com',
 	signed       => 'our.identity@example.com',
 	payload      => $payload,
@@ -54,8 +52,6 @@ ok($req);
 isa_ok($req, 'Net::AS2::Request');
 meta_ok($req);
 does_ok($req, 'Net::AS2::Request::Role::Signed');
-$req->prepare_body;
-$req->prepare_http;
 $message = $req->as_string;
 #diag("\n", $message);
 ok($message);
@@ -66,7 +62,7 @@ like($message, qr/Content-Type: application\/pkcs7-signature/);
 
 # ENCRYPTED, NOT SIGNED
 
-$req = $as2->request(
+$req = $as2->create_request(
 	to           => 'their.identity@example.com',
 	encrypted    => 'their.identity@example.com',
 	payload      => $payload,
@@ -76,8 +72,6 @@ ok($req);
 isa_ok($req, 'Net::AS2::Request');
 meta_ok($req);
 does_ok($req, 'Net::AS2::Request::Role::Encrypted');
-$req->prepare_body;
-$req->prepare_http;
 $message = $req->as_string;
 #diag("\n", $message);
 ok($message);
@@ -87,7 +81,7 @@ like($message, qr/Content-Transfer-Encoding: base64/);
 
 # ENCRYPTED, SIGNED
 
-$req = $as2->request(
+$req = $as2->create_request(
 	to           => 'their.identity@example.com',
 	signed       => 'our.identity@example.com',
 	encrypted    => 'their.identity@example.com',
@@ -99,8 +93,6 @@ isa_ok($req, 'Net::AS2::Request');
 meta_ok($req);
 does_ok($req, 'Net::AS2::Request::Role::Signed');
 does_ok($req, 'Net::AS2::Request::Role::Encrypted');
-$req->prepare_body;
-$req->prepare_http;
 $message = $req->as_string;
 #diag("\n", $message);
 ok($message);

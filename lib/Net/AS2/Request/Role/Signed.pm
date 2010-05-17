@@ -19,4 +19,10 @@ after 'prepare_body' => sub {
 	$self->_set_body($entity);
 };
 
+before 'handle_body' => sub {
+	my ($self) = @_;
+
+	print STDERR "\n\nin Signed handle_body\n\n";
+};
+
 1;

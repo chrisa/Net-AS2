@@ -19,7 +19,7 @@ has 'http'    => (is => 'ro', isa => HttpReq, required => 1);
 has 'body'    => (is => 'ro', isa => MIME,    required => 1, writer => '_set_body');
 has 'smime'   => (is => 'ro', isa => SMIME,   lazy => 1, default => sub { Crypt::SMIME->new } );
 
-has 'payload' => (is => 'rw', isa => Str, required => 1);
+has 'payload' => (is => 'rw', isa => Str, required => 0);
 has 'uri'     => (is => 'rw', isa => Uri, required => 1, coerce => 1);
 
 has 'to'       => (is => 'rw', isa => Str, required => 1);
@@ -75,12 +75,18 @@ sub prepare_http {
 		$self->http->header( $header => $self->body->head->get($header) );
 	}
 
+	$self->body->head->replace('Content-Transfer-Encoding', 'binary');
 	{
 		use bytes;
 		my $content = $self->body->body_as_string;
 		$self->http->header( 'Content-Length' => length $content );
 		$self->http->content($content);
 	}
+}
+
+sub handle_body {
+	my ($self) = @_;
+
 }
 
 sub as_string {

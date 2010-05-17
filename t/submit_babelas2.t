@@ -21,7 +21,7 @@ $as2->add_cert( 'BabelAS2 Test Server' => $their_cert );
 my $payload = 'this is the payload';
 my $content_type = 'text/plain';
 
-my $req = $as2->request(
+my $req = $as2->create_request(
 	to           => 'BabelAS2 Test Server',
 	signed       => 'BabelAS2 Test Client',
 	encrypted    => 'BabelAS2 Test Server',

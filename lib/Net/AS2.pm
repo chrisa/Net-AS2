@@ -47,7 +47,7 @@ has 'certs' => (
 has 'uri'  => (is => 'ro', isa => Str, required => 1);
 has 'from' => (is => 'ro', isa => Str, required => 1);
 	
-sub request {
+sub create_request {
 	my ($self, %params) = @_;
 	
 	my $body = MIME::Entity->new;
@@ -80,6 +80,56 @@ sub request {
 		);
 	}
 
+	$request->prepare_body;
+	$request->prepare_http;
+
+	return $request;
+}
+
+sub handle_request {
+	my ($self, $http) = @_;
+
+	my $Encoding    = $http->header('Content-Transfer-Encoding');
+	my $Type        = $http->header('Content-Type');
+	my $Disposition = $http->header('Content-Disposition');
+
+	chomp $Encoding;
+	chomp $Type;
+	chomp $Disposition;
+
+	my %args = (
+		Data	    => $http->content,
+		Encoding    => $Encoding,
+		Type	    => $Type,
+		Disposition => $Disposition,
+	);
+
+	my $body = MIME::Entity->build(%args);
+	$body->head->fold_length(1000);
+	$body->head->unfold;
+
+	my $request = Net::AS2::Request->new(
+		from	     => $http->header('From'),
+		to	     => $http->header('To'),
+		as2_from     => $http->header('AS2-From'),
+		as2_to       => $http->header('AS2-To'),
+		subject      => $http->header('Subject'),
+		http	     => $http,
+		uri	     => $self->uri,
+		body         => $body,
+	);
+
+	# XXX not necessarily to/from
+	if ($http->header('Content-Type') =~ /^application\/pkcs7-mime/) {
+		Net::AS2::Request::Role::Encrypted->meta->apply($request);
+		$request->setPrivateKey(
+			$self->get_key($request->to),
+			$self->get_cert($request->to),
+		);
+	}
+
+	$request->handle_body($self);
+	
 	return $request;
 }
 
